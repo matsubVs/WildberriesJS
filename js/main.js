@@ -13,20 +13,19 @@ const mySwiper = new Swiper('.swiper-container', {
 
 // cart
 const buttonCart = document.querySelector('.button-cart');
-const modalCart = document.querySelector('#modal-cart');
 const overlay = document.querySelector('.overlay');
 
 const openModal = () => {
-	modalCart.classList.add('show');
+	overlay.classList.add('show');
 }
 
 const closeModal = event => {
 	const t = event.target;
 
 	if (!t.closest('.modal')) {
-		modalCart.classList.remove('show');
+		overlay.classList.remove('show');
 	} else if (t.matches('.modal-close')) {
-		modalCart.classList.remove('show');
+		overlay.classList.remove('show');
 	}
 }
 
