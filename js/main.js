@@ -49,3 +49,4 @@ buttonCart.addEventListener('click', openModal);
 		});
 	}
 }
+
