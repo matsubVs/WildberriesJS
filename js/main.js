@@ -15,6 +15,10 @@ const scrollToTop = () => {
 	});
 }
 
+const showAll = () => {
+	getGoods().then(renderCards);
+}
+
 // cart
 const buttonCart = document.querySelector('.button-cart'),
 	overlay = document.querySelector('.overlay');
@@ -94,7 +98,7 @@ const renderCards = data => {
 
 more.addEventListener('click', event => {
 	event.preventDefault();
-	getGoods().then(renderCards);
+	showAll();
 	setTimeout(scrollToTop, 400);
 });
 
@@ -116,7 +120,7 @@ navigationWrapper.addEventListener('click', event => {
 		const field = goodLink.dataset.field;
 		const value = goodLink.textContent;
 		if (value === 'All') {
-			getGoods().then(renderCards);
+			showAll();
 		} else {
 			filterCards(field, value);
 		}
@@ -125,13 +129,15 @@ navigationWrapper.addEventListener('click', event => {
 
 // banners
 
-const viewButtons = [...document.querySelectorAll('button span.button-text')].filter(button => {
-	return button.textContent === 'View all';
+const viewButtons = [...document.querySelectorAll('button')].filter(button => {
+
+	return button.querySelector('span') && button.querySelector('span').textContent ===  'View all' ?
+		true : false;
 });
 
 viewButtons.forEach(button => {
 	button.addEventListener('click', () => {
-		getGoods().then(renderCards);
+		showAll();
 		setTimeout(scrollToTop, 400);
 	});
 });
