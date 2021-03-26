@@ -72,6 +72,17 @@ button {
     margin-left: 10px;
 }
 
+.cart-clear {
+    position: relative;
+    left: 465px;
+
+}
+
+.cart-clear.button {
+    padding: 2px 5px;
+    background-color: red;
+}
+
 .show-goods .slider,
 .show-goods .special-offers {
     display: none;

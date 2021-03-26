@@ -8,29 +8,152 @@ const mySwiper = new Swiper('.swiper-container', {
 	},
 });
 
+const buttonCart = document.querySelector('.button-cart'),
+	overlay = document.querySelector('.overlay'),
+	more = document.querySelector('.more'),
+	navigationWrapper = document.querySelector('.navigation'),
+	longGoodsList = document.querySelector('.long-goods-list'),
+	cartTableGoods = document.querySelector('.cart-table__goods'),
+	cartTableTotal = document.querySelector('.cart-table__total'),
+	cartCount = document.querySelector('.cart-count'),
+	cartClear = document.querySelector('.cart-clear');
+
 const scrollToTop = () => {
 	document.querySelector('#body').scrollIntoView({
 		behavior: 'smooth',
 		block: 'start'
 	});
-}
+};
+
+const getGoods = async () => {
+	const result = await fetch('db/db.json');
+	if (!result.ok) {
+		throw 'Ошибка запроса: ' + result.status;
+	} else {
+		return result.json();
+	}
+};
+
+const cart = {
+	cartGoods: [],
+	renderCart() {
+		cartTableGoods.textContent = '';
+		this.cartGoods.forEach(({ id, name, price, count }) => {
+			const trGood = document.createElement('tr');
+			trGood.className = 'cart-item';
+			trGood.dataset.id = id;
+
+			trGood.innerHTML = `
+				<td>${name}</td>
+				<td>${price}$</td>
+				<td><button class="cart-btn-minus">-</button></td>
+				<td>${count}</td>
+				<td><button class="cart-btn-plus">+</button></td>
+				<td>${price * count}$</td>
+				<td><button class="cart-btn-delete">x</button></td>
+			`
+			cartTableGoods.append(trGood);
+		});
+
+		cartTableTotal.textContent = this.cartGoods.reduce((sum, item) => sum + (item.price * item.count), 0) + '$';
+
+		cartCount.textContent = this.cartGoods.reduce((sum, item) => sum + item.count, 0);
+	},
+
+	deleteGood(id) {
+		this.cartGoods = this.cartGoods.filter(item => item.id !== id);
+		this.renderCart();
+	},
+
+	minusGood(id) {
+		for (const item of this.cartGoods) {
+			if (item.id === id) {
+				if (item.count <= 1) {
+					this.deleteGood(id);
+				} else {
+					item.count--;
+				};
+				break;
+			};
+		};
+
+		this.renderCart();
+	},
+
+	plusGood(id) {
+		for (const item of this.cartGoods) {
+			if (item.id === id) {
+				item.count += 1;
+				break;
+			};
+		};
+
+		this.renderCart();
+	},
+	
+	addGood(id) {
+		const goodItem = this.cartGoods.find(item => item.id === id);
+		if (goodItem) {
+			this.plusGood(id);
+		} else {
+			getGoods()
+				.then(data => data.find(item => item.id === id))
+				.then(({ id, name, price }) => {
+					this.cartGoods.push({
+						id,
+						name,
+						price,
+						count: 1
+					});
+					this.renderCart();
+				})
+		}
+	},
+
+	clearCart() {
+		this.cartGoods = [];
+		this.renderCart();
+	}
+};
+
+document.body.addEventListener('click', event => {
+	const addToCartButton = event.target.closest('.add-to-cart');
+
+	if (addToCartButton) {
+		cart.addGood(addToCartButton.dataset.id);
+	}
+});
+
+cartClear.addEventListener('click', cart.clearCart.bind(cart));
+
+cartTableGoods.addEventListener('click', event => {
+	const target = event.target;
+	
+	if (target.tagName === 'BUTTON') {
+		const id = target.closest('.cart-item').dataset.id;
+		if (target.classList.contains('cart-btn-delete')) {
+			cart.deleteGood(id);
+		} else if (target.classList.contains('cart-btn-plus')) {
+			cart.plusGood(id);
+		} else if (target.classList.contains('cart-btn-minus')) {
+			cart.minusGood(id);
+		};
+	}
+});
 
 const showAll = () => {
 	getGoods().then(renderCards);
-}
-
-// cart
-const buttonCart = document.querySelector('.button-cart'),
-	overlay = document.querySelector('.overlay');
+};
 
 const openModal = () => {
 	overlay.classList.add('show');
+	cart.renderCart();
 };
 
 const closeModal = event => {
 	const t = event.target;
 	
-	if (!t.closest('.modal') || t.matches('.modal-close')) {
+	if ((!t.closest('.modal') || t.matches('.modal-close')) && !t.closest('td')) {
 		overlay.classList.remove('show');
 	}
 };
@@ -38,7 +161,6 @@ const closeModal = event => {
 overlay.addEventListener('click', closeModal);
 buttonCart.addEventListener('click', openModal);
 
-//scroll smooth 
 {
 	const scrollLinks = document.querySelectorAll('a.scroll-link');
 
@@ -52,21 +174,6 @@ buttonCart.addEventListener('click', openModal);
 				block: 'start'
 			});
 		});
-	}
-};
-
-// goods
-
-const more = document.querySelector('.more'),
-	navigationWrapper = document.querySelector('.navigation'),
-	longGoodsList = document.querySelector('.long-goods-list');
-
-const getGoods = async () => {
-	const result = await fetch('db/db.json');
-	if (!result.ok) {
-		throw 'Ошибка запроса: ' + result.status;
-	} else {
-		return result.json();
 	}
 };
 
@@ -104,11 +211,7 @@ more.addEventListener('click', event => {
 
 const filterCards = (field, value) => {
 	getGoods()
-		.then(data => {
-			return data.filter(good => {
-				return good[field] === value;
-			});
-		})
+		.then(data => data.filter(good => good[field] === value))
 		.then(renderCards);
 };
 
@@ -126,8 +229,6 @@ navigationWrapper.addEventListener('click', event => {
 		}
 	}
 });
-
-// banners
 
 const viewButtons = [...document.querySelectorAll('button')].filter(button => {
 
