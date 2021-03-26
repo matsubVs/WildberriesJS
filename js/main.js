@@ -242,3 +242,29 @@ viewButtons.forEach(button => {
 		setTimeout(scrollToTop, 400);
 	});
 });
+
+const modalForm = document.querySelector('.modal-form');
+
+const postData = dataUser => fetch('../server.php', {
+	method: 'POST',
+	body: dataUser,
+});
+
+modalForm.addEventListener('submit', event => {
+	event.preventDefault();
+	formData = new FormData(modalForm);
+	formData.append('cart', JSON.stringify(cart.cartGoods));
+	postData(formData)
+		then(response => {
+			if(!response.ok) {
+				throw new Error(response.status);
+			}
+			alert('Заказ успешно отправлен!');
+		})
+		.catch(error => alert('Ошибка'))
+		.finnaly(() => {
+			closeModal();
+			modalForm.reset();
+			cart.clearCart();
+		});
+});
